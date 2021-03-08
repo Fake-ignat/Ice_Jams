@@ -173,10 +173,12 @@ class CustomGeoJSONMaker():
 
                 if i + delta < len(self.KSVO_data):
                     next_date, next_id = self.KSVO_data[i + delta][0:2]
-
-                    if day_plus != next_date and id != next_id:
+                    if day_plus == next_date and id == next_id:
                         break
-                print(day_plus, name)
+                    print('NEXT', next_date, next_id)
+
+                print(day_plus, id)
+
                 plus_times = epoch_ms_time(day_plus)
                 plus_popup_text = create_jams_popup_text(vals, day_plus, '---')
                 fading_iconstyle = {**self.iconstyle,
