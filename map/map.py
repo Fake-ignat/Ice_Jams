@@ -26,12 +26,6 @@ class MyMap:
             duration='P1D',
             date_options='DD MMMM YYYY'
         )
-        # james.default_css = [
-        #     ('highlight.js_css',
-        #      'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/default.min.css'),
-        #     ('leaflet.timedimension_css',
-        #      '../css/leaflet.timedimension_css')
-        # ]
         self.map.add_child(james)
 
     def save_map(self, filename):
