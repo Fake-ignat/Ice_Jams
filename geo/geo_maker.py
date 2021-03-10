@@ -2,7 +2,7 @@ import sys
 
 sys.path.append('.')
 import csv
-from geojson import Feature, Point, FeatureCollection, MultiPoint
+from geojson import Feature, Point, FeatureCollection
 from geojson import dump as geodump
 import json
 import datetime as dt
@@ -41,8 +41,6 @@ def create_point_feature(loc, params):
 
 
 def epoch_ms_time(str_date, format="%Y-%m-%d"):
-    
-    
     utc_time = dt.datetime.strptime(str_date, format)
     epoch_ms_time = (utc_time - dt.datetime(1970, 1, 1)).total_seconds() * 1000
     return [int(epoch_ms_time)]
@@ -213,6 +211,8 @@ class CustomGeoJSONMaker():
                         
                         self.add_flood_feature(str_date, name, params, loc)
                         
+                        continue
+                    
                         if "конец подтопления" in params:
                             end_date = params["конец подтопления"]
                             # print('start_date ', str_date)

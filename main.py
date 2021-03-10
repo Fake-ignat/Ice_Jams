@@ -1,4 +1,5 @@
 from geo.geo_maker import CustomGeoJSONMaker
+from geo.geo_filter import GeoFilter
 from map.map import MyMap
 import sys
 import geojson
@@ -27,26 +28,24 @@ jams_iconstyle = {
                 'radius': 10
             }
 
-cgj_maker = CustomGeoJSONMaker(CSV_location_fname, KSVO_fname, SAVE_GJSON_fname)
-cgj_maker.set_iconstyle(jams_iconstyle)
-cgj_maker.extract_jams_data()
-cgj_maker.save_geo()
+# cgj_maker = CustomGeoJSONMaker(CSV_location_fname, KSVO_fname, SAVE_GJSON_fname)
+# cgj_maker.set_iconstyle(jams_iconstyle)
+# cgj_maker.extract_jams_data()
+# cgj_maker.save_geo()
 
-cgj_maker.save_gJSON_fname = SAVE_GJSON_fname = 'geo/floods.geojson'
-cgj_maker.features = []
+# cgj_maker.save_gJSON_fname = SAVE_GJSON_fname = 'geo/floods.geojson'
+# cgj_maker.features = []
 
-cgj_maker.extract_flood_data(floods_2013)
-cgj_maker.extract_flood_data(floods_2014)
-cgj_maker.extract_flood_data(floods_2015)
-cgj_maker.extract_flood_data(floods_2016)
-cgj_maker.extract_flood_data(floods_2017)
-cgj_maker.extract_flood_data(floods_2018)
-cgj_maker.extract_flood_data(floods_2019)
-cgj_maker.extract_flood_data(floods_2020)
-cgj_maker.extract_flood_data(floods_winter_17_20)
-
-cgj_maker.save_geo()
-
+# cgj_maker.extract_flood_data(floods_2013)
+# cgj_maker.extract_flood_data(floods_2014)
+# cgj_maker.extract_flood_data(floods_2015)
+# cgj_maker.extract_flood_data(floods_2016)
+# cgj_maker.extract_flood_data(floods_2017)
+# cgj_maker.extract_flood_data(floods_2018)
+# cgj_maker.extract_flood_data(floods_2019)
+# cgj_maker.extract_flood_data(floods_2020)
+# cgj_maker.extract_flood_data(floods_winter_17_20)
+# cgj_maker.save_geo()
 
 # ice_jams = {}
 # with open('geo/ice_jams.geojson', 'r') as f:
@@ -56,3 +55,21 @@ cgj_maker.save_geo()
 
 # my_map = MyMap(ice_jams)
 # my_map.save_map('map/Заторы на реках.html')
+
+jams_fname = 'geo/ice_jams.geojson'
+floods_fname = 'geo/floods.geojson'
+
+# geo_filter = GeoFilter(jams_fname, floods_fname)
+# geo_filter.filter_by_timeborder()
+# geo_filter.filter_by_jams_times()
+# geo_filter.filter_by_distance()
+# geo_filter.save_filtered_geojson('geo/filtered_floods.geojson')
+# geo_filter.get_unique_floods('geo/filtered_floods.geojson', 'geo/unique_filtered_floods.geojson')
+
+floods_fname = 'geo/filtered_floods.geojson'
+geo_filter2 = GeoFilter(jams_fname, floods_fname, 50)
+# geo_filter2.filter_by_timeborder()
+# geo_filter2.filter_by_jams_times()
+# geo_filter2.filter_by_distance()
+# geo_filter2.save_filtered_geojson('geo/filtered_floods_50.geojson')
+geo_filter2.get_unique_floods('geo/filtered_floods_50.geojson', 'geo/unique_filtered_floods_50.geojson')
