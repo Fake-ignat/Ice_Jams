@@ -46,9 +46,82 @@ class MyMap:
 
 
 if __name__ == '__main__':
-    data = []
-    with open('../csv/jams.csv', 'r', encoding='utf-8') as f:
-        reader = csv.reader(f, delimiter=',')
-        data = [row for row in reader]
-    my_map = MyMap(data)
-    my_map.save_map('../map/Заторы на реках.html')
+    # data = []
+    # with open('../csv/jams.csv', 'r', encoding='utf-8') as f:
+    #     reader = csv.reader(f, delimiter=',')
+    #     data = [row for row in reader]
+    # my_map = MyMap(data)
+    # my_map.save_map('../map/Заторы на реках.html')
+
+    ice_jams = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "geometry": {
+                    "type": "MultiPoint",
+                    "coordinates": [ [80.53,  59.04] ]
+                },
+                "properties": {
+                    "tooltip": "\u041a\u0430\u0440\u0433\u0430\u0441\u043e\u043a (\u0413\u041f \u043f\u0440\u0438 \u041a\u0430\u0440\u0433\u0430\u0441\u043e\u043a \u041c) - \u0440. \u041e\u0431\u044c",
+                    "popup": "<pre>           \u0414\u0430\u0442\u0430: 28.04.2015\n      \u0413\u0438\u0434\u0440\u043e\u043f\u043e\u0441\u0442: \u041a\u0430\u0440\u0433\u0430\u0441\u043e\u043a (\u0413\u041f \u043f\u0440\u0438 \u041a\u0430\u0440\u0433\u0430\u0441\u043e\u043a \u041c) - \u0440. \u041e\u0431\u044c\n           \u0420\u0435\u043a\u0430: \u0440. \u041e\u0431\u044c\n           \u041a\u0421\u0412\u041e: [11]\n</pre>",
+                    "times": [
+                        1435708800000.0
+                    ],
+                    "icon": "circle",
+                    "iconstyle": {
+                        "color": "#000000",
+                        "fill": True,
+                        "fillColor": "#09042C",
+                        "fillOpacity": 0.8,
+                        "radius": 10
+                    }
+                }
+            },
+            {
+            "type": "Feature",
+            "geometry": {
+                "type": "MultiPoint",
+                "coordinates": [
+                    [
+                        59.04,
+                        80.53
+                    ],
+                    [
+                        59.04,
+                        80.53
+                    ],
+                    [
+                        59.04,
+                        80.53
+                    ]
+                ]
+            },
+            "properties": {
+                "name": "10022",
+                "params": {
+                    "\u0414\u0430\u0442\u0430": "28.04.2015",
+                    "\u0413\u0438\u0434\u0440\u043e\u043f\u043e\u0441\u0442": "\u041a\u0430\u0440\u0433\u0430\u0441\u043e\u043a (\u0413\u041f \u043f\u0440\u0438 \u041a\u0430\u0440\u0433\u0430\u0441\u043e\u043a \u041c) - \u0440. \u041e\u0431\u044c",
+                    "\u0420\u0435\u043a\u0430": "\u0440. \u041e\u0431\u044c",
+                    "\u041a\u0421\u0412\u041e": "[11]"
+                },
+                "popup": "<pre>           \u0414\u0430\u0442\u0430: 28.04.2015\n      \u0413\u0438\u0434\u0440\u043e\u043f\u043e\u0441\u0442: \u041a\u0430\u0440\u0433\u0430\u0441\u043e\u043a (\u0413\u041f \u043f\u0440\u0438 \u041a\u0430\u0440\u0433\u0430\u0441\u043e\u043a \u041c) - \u0440. \u041e\u0431\u044c\n           \u0420\u0435\u043a\u0430: \u0440. \u041e\u0431\u044c\n           \u041a\u0421\u0412\u041e: [11]\n</pre>",
+                "times": [
+                        1430265600000, 1430352000000, 1430438400000
+                ],
+                "icon": "circle",
+                "iconstyle": {
+                    "color": "#000000",
+                    "fill": True,
+                    "fillColor": "#09042C",
+                    "fillOpacity": 0.5,
+                    "radius": 5,
+                    "opacity": 0.0
+                }
+            }
+        }
+        ]
+    }
+        
+    my_map = MyMap(ice_jams)
+    my_map.save_map('map/Test.html')

@@ -6,8 +6,25 @@ import geojson
 sys.path.append('.')
 
 
+def load_geojson(filename):
+    with open(filename, 'r') as f:
+        data = geojson.load(f)
+    return data["features"]
+
+def save_geojson(filename, data):
+        collection = {"type": "FeatureCollection", "features": data}
+        with open(filename, 'w') as f:
+            geojson.dump(collection, f)
+            
+def merge_geojson(g1_fname, g2_fname, save_name):
+    g1 = load_geojson(g1_fname)
+    g2 = load_geojson(g2_fname)
+    g = g1 + g2
+    print(len(g2))
+    # save_geojson(save_name, g)
+
 CSV_location_fname = 'csv/id - координаты.csv'
-SAVE_GJSON_fname = 'geo/ice_jams.geojson'
+SAVE_GJSON_fname = 'geo/ice_jams.geojson' # 'geo/floods.geojson'  
 KSVO_fname = 'csv/КСВО 11-12.csv'
 
 floods_2013 = 'storage/floods/geo 2013.json'
@@ -48,7 +65,7 @@ jams_iconstyle = {
 # cgj_maker.save_geo()
 
 # ice_jams = {}
-# with open('geo/ice_jams.geojson', 'r') as f:
+# with open(SAVE_GJSON_fname, 'r') as f:
 #     ice_jams = geojson.loads(f.read())
 
 
@@ -56,20 +73,32 @@ jams_iconstyle = {
 # my_map = MyMap(ice_jams)
 # my_map.save_map('map/Заторы на реках.html')
 
-jams_fname = 'geo/ice_jams.geojson'
-floods_fname = 'geo/floods.geojson'
+# jams_fname = 'geo/ice_jams.geojson'
+# floods_fname = 'geo/floods.geojson'
 
 # geo_filter = GeoFilter(jams_fname, floods_fname)
 # geo_filter.filter_by_timeborder()
 # geo_filter.filter_by_jams_times()
 # geo_filter.filter_by_distance()
-# geo_filter.save_filtered_geojson('geo/filtered_floods.geojson')
+# # geo_filter.save_filtered_geojson('geo/filtered_floods.geojson')
 # geo_filter.get_unique_floods('geo/filtered_floods.geojson', 'geo/unique_filtered_floods.geojson')
+# geo_filter.get_unique_floods_by_time('geo/unique_filtered_floods.geojson', 'geo/total_filtered_floods.geojson')
 
-floods_fname = 'geo/filtered_floods.geojson'
-geo_filter2 = GeoFilter(jams_fname, floods_fname, 50)
+g1_fname = 'geo/ice_jams.geojson'
+g2_fname = 'geo/total_filtered_floods.geojson'
+save_name = 'geo/filtered_flood_jams.geojson'
+merge_geojson(g1_fname, g2_fname, save_name)
+
+# ice_jams = {}
+# with open(save_name, 'r') as f:
+#     ice_jams = geojson.load(f)
+# my_map = MyMap(ice_jams)
+# my_map.save_map('map/Заторы подтопления.html')
+
+# floods_fname = 'geo/filtered_floods.geojson'
+# geo_filter2 = GeoFilter(jams_fname, floods_fname, 50)
 # geo_filter2.filter_by_timeborder()
 # geo_filter2.filter_by_jams_times()
 # geo_filter2.filter_by_distance()
 # geo_filter2.save_filtered_geojson('geo/filtered_floods_50.geojson')
-geo_filter2.get_unique_floods('geo/filtered_floods_50.geojson', 'geo/unique_filtered_floods_50.geojson')
+# geo_filter2.get_unique_floods('geo/filtered_floods_50.geojson', 'geo/unique_filtered_floods_50.geojson')

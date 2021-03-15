@@ -2,11 +2,10 @@ import sys
 
 sys.path.append('.')
 import csv
-from geojson import Feature, Point, FeatureCollection
+from geojson import Feature, MultiPoint, FeatureCollection
 from geojson import dump as geodump
 import json
 import datetime as dt
-
 
 jams_iconstyle = {
                 'color': '#000000',
@@ -36,19 +35,18 @@ def save_JSON_data(filename, data):
 
 def create_point_feature(loc, params):
     return Feature(None,
-                   geometry=Point(loc[::-1]),
+                   geometry=MultiPoint(list(loc)),
                    properties=params)
 
 
 def epoch_ms_time(str_date, format="%Y-%m-%d"):
     utc_time = dt.datetime.strptime(str_date, format)
     epoch_ms_time = (utc_time - dt.datetime(1970, 1, 1)).total_seconds() * 1000
-    return [int(epoch_ms_time)]
+    return int(epoch_ms_time)
 
 
 def create_jams_popup_text(vals, str_date, code_status):
     name = vals['name']
-    loc = vals['loc']
     river = vals['river']
 
     params = {
@@ -64,8 +62,9 @@ def create_jams_popup_text(vals, str_date, code_status):
             for k, v in params.items() if v
         ]
     )
+    
 
-    return f"<pre>{popup_text}</pre>"
+    return f"<pre>{popup_text}</pre>", params
 
 
 def create_floods_popup_text(params):
@@ -78,8 +77,9 @@ def create_floods_popup_text(params):
     return f"<pre>{popup_text}</pre>"
 
 
-def ts_gJSON_params(name, times, popup_text, iconstyle):
-    return {'tooltip': name,
+def ts_gJSON_params(name, times, popup_text, raw_params, iconstyle):
+    return {'name': name,
+            'params': raw_params,
             'popup': popup_text,
             'times': times,
             'icon': 'circle',
@@ -88,14 +88,16 @@ def ts_gJSON_params(name, times, popup_text, iconstyle):
 
 
 def get_floods_iconstyle(homes, lands):
+    fill_color = 'white'
+    radius = 5
     if homes:
         fill_color = '#ff0000'
         radius = int(homes ** 0.5) if homes > 32 else 5
         if homes > 1000:
             radius = 25
-    else:
+    elif lands:
         fill_color = '#ffff00'
-        radius = int(lands ** 0.4) if lands > 100 else 5
+        radius = int(lands ** 0.5) if lands > 100 else 5
         if lands > 1000:
             radius = 25
     return {
@@ -114,7 +116,9 @@ class CustomGeoJSONMaker():
 
         self.features = []
         self.id_storage = {}
+        self.times = []
         self.KSVO_data = sorted(load_csv_data(KSVO_fname), key=lambda line: (line[1], line[0]))
+        self.KSVO_len = len(self.KSVO_data)
         
         
         self.iconstyle = {}
@@ -144,11 +148,7 @@ class CustomGeoJSONMaker():
                                        river=river)
 
     def get_locations_vals(self, id):
-        # if len(id) < 5:
-        #     for prefix in range(10):
-        #         id = f'{prefix}{id}'
-        #         if id in self.ids:
-        #             break
+        
         if id not in self.ids:
             return
         return self.id_storage[id]
@@ -156,45 +156,47 @@ class CustomGeoJSONMaker():
     def extract_jams_data(self):
         for i, line in enumerate(self.KSVO_data):
             str_date = line[0]
-            times = epoch_ms_time(str_date)
+            times = [epoch_ms_time(str_date)]
             code_status = ','.join(line[2:])
 
-            id = line[1]
-            vals = self.get_locations_vals(id)
+            post_id = line[1]
+            vals = self.get_locations_vals(post_id)
 
             if not vals:
                 continue
 
             name = vals['name']
-            loc = vals['loc']
+            loc = [vals['loc'][::-1]]
 
-            popup_text = create_jams_popup_text(vals, str_date, code_status)
-            params = ts_gJSON_params(name, times, popup_text, self.iconstyle)
+            popup_text, raw_params = create_jams_popup_text(vals, str_date, code_status)
+            params = ts_gJSON_params(name, times, popup_text, raw_params, self.iconstyle)
             self.features.append(create_point_feature(loc, params))
-
-            for delta in range(1, 4):
+            self.create_fading_points(i, name, post_id, str_date, loc, popup_text, raw_params)
+                
+    def create_fading_points(self, index, post_id, name, str_date, loc, popup_text, raw_params):
+        fading_iconstyle = {**self.iconstyle,
+                            **{'fillOpacity': 0.5, 'opacity': 0.0, 'radius': 5}}
+        fading_times = []
+        
+        for delta in range(1, 4):
                 fading_date = dt.datetime.strptime(str_date, "%Y-%m-%d") + dt.timedelta(days=delta)
                 day_plus = fading_date.strftime("%Y-%m-%d")
-
-                if i + delta < len(self.KSVO_data):
-                    next_date, next_id = self.KSVO_data[i + delta][0:2]
-                    if day_plus == next_date and id == next_id:
+                
+                if index + delta < self.KSVO_len:
+                    next_date, next_id = self.KSVO_data[index + delta][0:2]
+                    
+                    if day_plus == next_date and post_id == next_id:
                         break
-                    # print('NEXT', next_date, next_id)
+                    
+                fading_times.append(epoch_ms_time(day_plus))
+          
+        isShouldBeAdded = len(fading_times)
+        
+        if isShouldBeAdded:
+            loc = loc * isShouldBeAdded
+            plus_params = ts_gJSON_params(name, fading_times, popup_text, raw_params, fading_iconstyle)
+            self.features.append(create_point_feature(loc, plus_params))
 
-                # print(day_plus, id)
-
-                plus_times = epoch_ms_time(day_plus)
-                plus_popup_text = create_jams_popup_text(vals, str_date, code_status)
-                fading_iconstyle = {**self.iconstyle,
-                                    **{
-                                        'fillOpacity': 0.5,
-                                        'opacity': 0.0,
-                                        'radius': 5
-                                    }}
-
-                plus_params = ts_gJSON_params(name, plus_times, plus_popup_text, fading_iconstyle)
-                self.features.append(create_point_feature(loc, plus_params))
 
     def extract_flood_data(self, json_fname):
         floods = load_json_data(json_fname)
@@ -203,68 +205,89 @@ class CustomGeoJSONMaker():
                 for place in vals:
                     try:
                         params = place['params']
-                        loc = place["location"]
-                        if not loc:
+                        location = place["location"]
+                        
+                        if not location:
                             continue
+                        
+                        loc = [location[::-1]]
                         name = place["нас. пункт"]
                         str_date = params["начало подтопления"]
                         
-                        self.add_flood_feature(str_date, name, params, loc)
+                        flood_time = epoch_ms_time(str_date, '%d.%m.%Y')
+                        assert isinstance(flood_time, int)
+                        self.times.append(flood_time)
                         
-                        continue
-                    
+                        
                         if "конец подтопления" in params:
                             end_date = params["конец подтопления"]
-                            # print('start_date ', str_date)
-                            # print('end_date ', end_date)
+                            
                             if not end_date:
                                 continue
                             
-                            period = self.get_dates_period(str_date, end_date)
-                            if period:
-                                for day in period:
-                                    self.add_flood_feature(day, name, params, loc)    
+                            self.get_dates_period(str_date, end_date)
                             
+                            
+                        params['нас.пункт'] = name
+                        params['МО'] = district
+                        params['Субъект'] = region
+                        
+                        self.add_flood_feature(name, params, loc)
+                        self.times = []
+                        
+                        
                     except Exception as e:
                         print(e)
-                        # print(f'{region} {district} {place}')
+                        print(f'{region} {district} {place}')
 
-    def add_flood_feature(self, str_date, name, params, loc):
+    def add_flood_feature(self, name, params, loc):
         
-        homes = params['дома']
-        lands = params['приусад. участки']
-        params = {**{"нас.пункт": name}, **params}
+        homes, lands = None, None
         
-        times = epoch_ms_time(str_date, '%d.%m.%Y')
+        
+        if 'дома' in params:
+            homes = params['дома']
+            
+        if 'приусад. участки' in params:    
+            lands = params['приусад. участки']
+            
+        
         floods_iconstyle = get_floods_iconstyle(homes, lands)
         popup_text = create_floods_popup_text(params)
+        
+        loc_multiplicator = len(self.times)
+        if loc_multiplicator > 1:
+            loc = loc * loc_multiplicator
 
-        gj_params = ts_gJSON_params(name, times, popup_text, floods_iconstyle)
+        gj_params = ts_gJSON_params(name, self.times, popup_text, params, floods_iconstyle)
 
         self.features.append(create_point_feature(loc, gj_params))
         
     def get_dates_period(self, start_date, end_date):
-        period = []
+        
         d0 = dt.datetime.strptime(start_date, '%d.%m.%Y')
         d1 = dt.datetime.strptime(end_date, '%d.%m.%Y')
+        
         if d1 < d0:
             return
+        
         delta = (d1-d0).days
+        
         for i in range(1, delta):
             new_date = d0 + dt.timedelta(days=i)
-            str_new_date = new_date.strftime('%d.%m.%Y')
-            period.append(str_new_date)
-        return period
+            
+            epoch_time = (new_date - dt.datetime(1970, 1, 1)).total_seconds() * 1000
+            self.times.append(int(epoch_time))
             
         
     
 
-if __name__ == '__main__':
-    CSV_location_fname = '../csv/id - координаты.csv'
-    SAVE_GJSON_fname = '../geo/ice_jams.geojson'
-    KSVO_fname = '../csv/КСВО 11-12.csv'
+# if __name__ == '__main__':
+#     CSV_location_fname = '../csv/id - координаты.csv'
+#     SAVE_GJSON_fname = '../geo/ice_jams.geojson'
+#     KSVO_fname = '../csv/КСВО 11-12.csv'
 
-    cgj_maker = CustomGeoJSONMaker(CSV_location_fname, KSVO_fname, SAVE_GJSON_fname)
-    cgj_maker.extract_jams_data()
+#     cgj_maker = CustomGeoJSONMaker(CSV_location_fname, KSVO_fname, SAVE_GJSON_fname)
+#     cgj_maker.extract_jams_data()
 
-    cgj_maker.save_geo()
+#     cgj_maker.save_geo()
